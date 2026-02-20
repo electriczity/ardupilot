@@ -1,0 +1,18 @@
+# Default parameters for MicoAir743v2PPM
+# Quad X frame with AM32 4-in-1 ESC on DShot600
+
+# Frame
+FRAME_CLASS 1
+FRAME_TYPE 1
+
+# DShot600 for AM32 ESC
+MOT_PWM_TYPE 6
+SERVO_DSHOT_ESC 1
+SERVO_BLH_AUTO 0
+
+# FC mounted rotated 45 degrees clockwise
+AHRS_ORIENTATION 1
+
+# External GPS+compass module (no internal compass on this board)
+GPS1_TYPE 1
+COMPASS_EXTERNAL 1
