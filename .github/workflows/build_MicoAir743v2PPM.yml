@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       ardupilot_ref:
-        description: 'ArduPilot branch or tag to build against (e.g. Copter-4.6 or ArduCopter-4.6.3)'
+        description: 'ArduPilot branch or tag to build against (e.g. Copter-4.5 or Copter-4.6.3)'
         required: true
-        default: 'Copter-4.6'
+        default: 'Copter-4.6.3'
 
 jobs:
   build:
@@ -18,13 +18,17 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.ardupilot_ref }}
-          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Init submodules
+        run: |
+          git submodule update --init --depth 1 --jobs 4 --recursive
 
       - name: Apply MicoAir743v2PPM hwdef from micoair743v2ppm branch
         run: |
           git config --global --add safe.directory ${GITHUB_WORKSPACE}
-          git fetch origin micoair743v2ppm
-          git checkout origin/micoair743v2ppm -- \
+          git -c submodule.recurse=false fetch origin micoair743v2ppm
+          git -c submodule.recurse=false checkout origin/micoair743v2ppm -- \
             libraries/AP_HAL_ChibiOS/hwdef/MicoAir743v2PPM/
 
       - name: Configure ccache
@@ -37,18 +41,18 @@ jobs:
 
       - name: Build MicoAir743v2 (original, no PPM)
         run: |
-          ./waf configure --board MicoAir743v2
+          ./waf configure --board MicoAir743v2 --no-submodule-update
           ./waf copter
 
       - name: Build MicoAir743v2PPM
         run: |
-          ./waf configure --board MicoAir743v2PPM
+          ./waf configure --board MicoAir743v2PPM --no-submodule-update
           ./waf copter
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MicoAir743v2-${{ github.event.inputs.ardupilot_ref }}
+          name: MicoAir743v2-${{ github.event.inputs.ardupilot_ref }}.zip
           retention-days: 90
           path: |
             build/MicoAir743v2/bin/AP_Bootloader.bin
