@@ -1,0 +1,19 @@
+# hw definition file for processing by chibios_hwdef.py
+# MicoAir743v2 variant with hardware PPM-Sum RC input on PB1 (TIM3_CH4) via EICU.
+# TIM3 cannot be shared with PWM output, so PWM5 (PB1) and PWM6 (PB0) are removed.
+# 8 PWM outputs remain on TIM1/TIM4/TIM15 - sufficient for a quadcopter.
+# SERIAL6 RCIN inherited - acts as automatic fallback / future serial RC upgrade path.
+
+include ../MicoAir743v2/hwdef.dat
+
+# Hardware is identical to MicoAir743v2, reuse its bootloader binary unchanged.
+USE_BOOTLOADER_FROM_BOARD MicoAir743v2
+
+# Free TIM3 from PWM so EICU can own the peripheral exclusively.
+# was: PB1  TIM3_CH4  TIM3  PWM(5)  GPIO(54) BIDIR
+# was: PB0  TIM3_CH3  TIM3  PWM(6)  GPIO(55)
+undef PB1 PB0
+
+# PB1 as PPM-Sum RC input via EICU (interrupt-driven pulse capture).
+# PULLDOWN: OrangeRX R617XL idles CPPM low between pulses (push-pull output).
+PB1 TIM3_CH4 TIM3 RCININT PULLDOWN LOW

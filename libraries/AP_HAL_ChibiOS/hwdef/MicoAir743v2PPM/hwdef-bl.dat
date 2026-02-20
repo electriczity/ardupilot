@@ -1,0 +1,3 @@
+# PPM_JP: Bootloader definition for MicoAir743v2PPM
+# PPM_JP: Hardware is identical to MicoAir743v2; share the same bootloader
+include ../MicoAir743v2/hwdef-bl.dat

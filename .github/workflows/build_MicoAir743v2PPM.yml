@@ -1,0 +1,58 @@
+name: Build MicoAir743v2(PPM) firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      ardupilot_ref:
+        description: 'ArduPilot branch or tag to build against (e.g. Copter-4.6 or ArduCopter-4.6.3)'
+        required: true
+        default: 'Copter-4.6'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container: ardupilot/ardupilot-dev-chibios:v0.1.3
+
+    steps:
+      - name: Checkout target ArduPilot ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.ardupilot_ref }}
+          submodules: 'recursive'
+
+      - name: Apply MicoAir743v2PPM hwdef from micoair743v2ppm branch
+        run: |
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+          git fetch origin micoair743v2ppm
+          git checkout origin/micoair743v2ppm -- \
+            libraries/AP_HAL_ChibiOS/hwdef/MicoAir743v2PPM/
+
+      - name: Configure ccache
+        run: . .github/workflows/ccache.env
+
+      - name: Build MicoAir743v2 bootloader (shared by both variants)
+        run: |
+          ./waf configure --board MicoAir743v2 --bootloader --no-submodule-update
+          ./waf bootloader
+
+      - name: Build MicoAir743v2 (original, no PPM)
+        run: |
+          ./waf configure --board MicoAir743v2
+          ./waf copter
+
+      - name: Build MicoAir743v2PPM
+        run: |
+          ./waf configure --board MicoAir743v2PPM
+          ./waf copter
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MicoAir743v2-${{ github.event.inputs.ardupilot_ref }}
+          retention-days: 90
+          path: |
+            build/MicoAir743v2/bin/AP_Bootloader.bin
+            build/MicoAir743v2/bin/arducopter.apj
+            build/MicoAir743v2/bin/arducopter.bin
+            build/MicoAir743v2PPM/bin/arducopter.apj
+            build/MicoAir743v2PPM/bin/arducopter.bin
